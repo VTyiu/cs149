@@ -229,10 +229,21 @@ void createArray (char ***array, int row, int col){
     POP_TRACE();
 }
 
-void addRow(char *** arr, int row, int col){
+void addRow(char *** arr, int rows, int col){
     PUSH_TRACE("adding row, reallocating more memory");
-    *arr = (char **)realloc((*arr), sizeof(char *) * row);
-    // arr[row-1] = (char *)malloc(sizeof(char) * col);
+    *arr = (char **)realloc((*arr), sizeof(char *) * rows);
+    *arr[rows-1] = (char *)malloc(sizeof(char) * col);
+}
+
+// function to print the array
+void printArray(char **arr, int row) 
+{
+  PUSH_TRACE("printArray");                              
+  for (int i = 0; i < row; i++)
+  {
+    printf("array[%d] = %s\n", i, arr[i]);
+  }
+  POP_TRACE();                                     
 }
 
 // ----------------------------------------------
@@ -292,16 +303,20 @@ while((read = getline(&line, &len, fp)) != -1){
 
 }
 
+printArray(array, ctr);
+
+// deallocate line
+if (line){
+    free(line);
+}
+
 // deallocate the array
 for(int i = 0; i < ctr; i++){
     free(array[i]);
 }
 free(array);
 
-// deallocate line
-if (line){
-    free(line);
-}
+
 
 // close memtrace.out
 close(fd);
