@@ -116,6 +116,8 @@ char* PRINT_TRACE()
 void* REALLOC(void* p,int t,char* file,int line)
 {
   p = realloc(p,t);
+  // print info about memory usage
+
   return p;
 }
 
@@ -211,12 +213,33 @@ void make_extend_array()
 
 // ----------------------------------------------
 // function main
-int main()
+int main(int argc, char *argv[])
 {
-        PUSH_TRACE("main");
+    PUSH_TRACE("main");
+    // make_extend_array();
 
-  make_extend_array();
+    // make sure correct number of arguments
+    if (argc != 2){
+        printf("Incorrect number of arguments: need two arguments: mem_tracer and the cmdfile to run\n");
+        exit(0);
+    }
 
-        POP_TRACE();
-        return(0);
+    // open file with commands
+    FILE * fp = fopen(argv[1], "r");
+    // error: if fp fails to open
+    if(fp == null){
+        fclose(fp);
+        printf("range: cannot open file\n");
+        exit(1);
+    }
+
+    // redirect stdout (fd 1) to memtrace.out file using dup2
+    int fd = open("memtrace.out", O_RDWR | O_CREAT | O_TRUNC, 0777); // create memtrace.out file
+    dup2(fd, fileno(stdout));
+
+    printf("this better work");
+
+    // end
+    POP_TRACE();
+    return(0);
 }// end main
