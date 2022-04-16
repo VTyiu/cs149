@@ -217,7 +217,7 @@ for(i=0; i<ROW; i++)
 
 // function: create array of type char **, initialize array mem with alloc to initial size of 10 char * pointers
 void createArray (char ***array, int row, int col){
-    PUSH_TRACE("createArray");
+    PUSH_TRACE("create array");
 
     // row will be 10 and col will be 20, col is max char per command and row is number of commands
     char **arr = (char **)malloc(sizeof(char *) * row);
@@ -229,8 +229,11 @@ void createArray (char ***array, int row, int col){
     POP_TRACE();
 }
 
-
-
+void addRow(char *** arr, int row, int col){
+    PUSH_TRACE("adding row, reallocating more memory");
+    *arr = (char **)realloc((*arr), sizeof(char *) * row);
+    // arr[row-1] = (char *)malloc(sizeof(char) * col);
+}
 
 // ----------------------------------------------
 // function main
@@ -258,9 +261,50 @@ int main(int argc, char *argv[])
 int fd = open("memtrace.out", O_RDWR | O_CREAT | O_TRUNC, 0777); // create memtrace.out file
 dup2(fd, fileno(stdout));
 
+// create an initial array with 10 rows
 char** array = NULL;
 int row = 10, col = 20;
 createArray(&array, row, col);
+
+// read from file and put each line onto the array
+char * line = NULL;
+size_t len = 0;
+ssize_t read;
+
+// start reading from file
+int ctr = 0; // keep track of number of rows in file
+while((read = getline(&line, &len, fp)) != -1){
+    ctr++; // increment counter, one line read
+
+    // edge case: last line of the cmd file will have a newline, fix by replacing with char
+    if(line[strlen(line) - 1] == '\n'){
+        line[strlen(line) - 1] = '\0';
+    }
+
+    if(ctr > row){ // if lines read is greater than number of rows, need to reallocate more rows
+        // add row, can make it a function, will keep as manual code for now
+        array = (char **) realloc(array, sizeof(char *)*ctr); // reallocate for row
+        array[ctr - 1] = (char *) malloc(sizeof(char)*(strlen(line)+1)); // allocate for column
+    }
+
+    // copy value of string into allocated memory
+    strncpy(array[ctr - 1], line, (strlen(line)+1));
+
+}
+
+// deallocate the array
+for(int i = 0; i < ctr; i++){
+    free(array[i]);
+}
+free(array);
+
+// deallocate line
+if (line){
+    free(line);
+}
+
+// close memtrace.out
+close(fd);
 
 
 // end
