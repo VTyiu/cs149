@@ -216,26 +216,19 @@ for(i=0; i<ROW; i++)
 
 
 // function: create array of type char **, initialize array mem with alloc to initial size of 10 char * pointers
-void createArray (char ***array, int row, int col){
+void createArray (char ***array, int row){
     PUSH_TRACE("create array");
 
-    // row will be 10 and col will be 20, col is max char per command and row is number of commands
+    // row will be 10 and col will be null, col is max char per command, row is number of commands and initialized to 10
     char **arr = (char **)malloc(sizeof(char *) * row);
     for(int i = 0; i < row; i++){
-        arr[i]=(char*)malloc(sizeof(char)*col);
+        arr[i] = NULL;
     }
-    //POP_TRACE();
     *array = arr;
     POP_TRACE();
 }
 
-void addRow(char *** arr, int rows, int col){
-    PUSH_TRACE("adding row, reallocating more memory");
-    *arr = (char **)realloc((*arr), sizeof(char *) * rows);
-    *arr[rows-1] = (char *)malloc(sizeof(char) * col);
-}
-
-// function to print the array, taken from given make extend array
+// function to print the array for testing, taken from the given make_extend_array
 void printArray(char **arr, int row) 
 {
   PUSH_TRACE("printArray");                              
@@ -246,35 +239,38 @@ void printArray(char **arr, int row)
   POP_TRACE();                                     
 }
 
-// start linked list
+// set up a LinkedList
+
+// node struct, each node has an index (should be the same as the array index) and holds a string (char*)
 struct node {
     int index;
-    char* cmd;
+    char* cmd; // the line
     struct node* next; // the node this node points to
 };
 
+// set head node as NULL
 static struct node* head = NULL;
 
 // adds node to the end of the linkedlist
 void addNode(char* line, int index){
-    struct node* toAdd = (struct node*)malloc(sizeof(struct node));
-    toAdd->cmd = (char*)malloc(strlen(line) + 1);
-    // memset(toAdd->line, '\0', strlen(line) + 1);
-    strncpy(toAdd->cmd, line, strlen(line) + 1);
+    PUSH_TRACE("addNode");
+    struct node* toAdd = (struct node*)malloc(sizeof(struct node)); // allocate for node to add
+    toAdd->cmd = (char*)malloc(strlen(line) + 1); // allocate for line and set cmd as the allocated space
+    strncpy(toAdd->cmd, line, strlen(line) + 1); // copy line to node toAdd cmd
     toAdd->index = index;
-    toAdd->next = NULL;
+    toAdd->next = NULL; // set next as NULL since this should be appended at the tail
 
-    if(head == NULL){
+    if(head == NULL){ // if the head is null (aka empty linkedList), set node toAdd as the head
         head = toAdd;
-        //return;
     }
-    else{
+    else{ // linkedList is not empty
         struct node* temp = head;
-        while(temp->next != NULL){
+        while(temp->next != NULL){ // iterate to the end of the linkedList
             temp = temp->next;
         }
-        temp->next = toAdd;
+        temp->next = toAdd; // temp now holds the last item of the linkedList, set the next of temp to the new node
     }
+    POP_TRACE();
 }
 
 // print linkedlist recursively
@@ -287,6 +283,20 @@ void printLinkedList(struct node* theNode){
     else{
         printf("LinkedList done printing\n");
     }
+    POP_TRACE();
+}
+
+// free linkedlist after use
+void freeLinkedList(){
+    PUSH_TRACE("free LinkedList");
+    struct node* temp; // temp node to hold the node to free, will be the node we iterate through the linkedList with
+    while(head != NULL){ // iterate through linkedList until all nodes are freed
+    	temp = head;
+        head = temp->next;
+        free(temp->cmd); // free cmd of current node
+        free(temp); // free current node
+    }
+    POP_TRACE();
 }
 
 // ----------------------------------------------
@@ -294,17 +304,16 @@ void printLinkedList(struct node* theNode){
 int main(int argc, char *argv[])
 {
     PUSH_TRACE("main");
-// make_extend_array();
 
-// make sure correct number of arguments
+// only two arguments, otherwise exit with 0
     if (argc != 2){
         printf("Incorrect number of arguments: need two arguments: mem_tracer and the cmdfile to run\n");
         exit(0);
     }
 
-// open file with commands
+    // open file with commands
     FILE * fp = fopen(argv[1], "r");
-// error: if fp fails to open
+    // error: if fp fails to open
     if(fp == NULL){
         fclose(fp);
         printf("range: cannot open file\n");
@@ -316,9 +325,9 @@ int fd = open("memtrace.out", O_RDWR | O_CREAT | O_TRUNC, 0777); // create memtr
 dup2(fd, fileno(stdout));
 
 // create an initial array with 10 rows
-char** array = NULL;
-int row = 10, col = 20;
-createArray(&array, row, col);
+char** array = NULL; // initialize array
+int row = 10, col = 0; // row is ten for initial array with ten rows, col will be used to hold the char length of commands
+createArray(&array, row);
 
 // read from file and put each line onto the array
 char * line = NULL;
@@ -328,33 +337,38 @@ ssize_t read;
 // start reading from file
 int ctr = 0; // keep track of number of rows in file
 while((read = getline(&line, &len, fp)) != -1){
-    ctr++; // increment counter, one line read
+    ctr++; // increment counter, means that one line is read
 
     // edge case: last line of the cmd file will have a newline, fix by replacing with char
     if(line[strlen(line) - 1] == '\n'){
         line[strlen(line) - 1] = '\0';
     }
 
+    col = strlen(line) + 1; // col is the number of chars in a command
+
     if(ctr > row){ // if lines read is greater than number of rows, need to reallocate more rows
-        // add row, can make it a function, will keep as manual code for now
         array = (char **) realloc(array, sizeof(char *)*ctr); // reallocate for row
-        array[ctr - 1] = (char *) malloc(sizeof(char)*(strlen(line)+1)); // allocate for column
-    	// addRow(array, ctr, strlen(line)+1);
+        array[ctr - 1] = (char *) malloc(sizeof(char)*col); // allocate for column
+    }else{
+    	array[ctr - 1]=(char*)malloc(sizeof(char)*col); // allocate for column
     }
-
     // copy value of string into allocated memory
-    strncpy(array[ctr - 1], line, (strlen(line)+1));
-
+    strncpy(array[ctr - 1], line, col);
 }
 
 // insert array into linkedlist and print recursively
 for (int i = 0; i < ctr; i++){
     addNode(array[i], i);
 }
+printf("print LinkedList:\n");
 printLinkedList(head);
 
-printArray(array, ctr);
+// deallocate the linkedlist
+freeLinkedList();
 
+//printArray(array, ctr);
+
+// close input file
 fclose(fp);
 
 // deallocate line
@@ -368,11 +382,8 @@ for(int i = 0; i < ctr; i++){
 }
 free(array);
 
-
-
 // close memtrace.out
 close(fd);
-
 
 // end
 POP_TRACE();
