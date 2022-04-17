@@ -246,6 +246,49 @@ void printArray(char **arr, int row)
   POP_TRACE();                                     
 }
 
+// start linked list
+struct node {
+    int index;
+    char* cmd;
+    struct node* next; // the node this node points to
+};
+
+static struct node* head = NULL;
+
+// adds node to the end of the linkedlist
+void addNode(char* line, int index){
+    struct node* toAdd = (struct node*)malloc(sizeof(struct node));
+    toAdd->cmd = (char*)malloc(strlen(line) + 1);
+    // memset(toAdd->line, '\0', strlen(line) + 1);
+    strncpy(toAdd->cmd, line, strlen(line) + 1);
+    toAdd->index = index;
+    toAdd->next = NULL;
+
+    if(head == NULL){
+        head = toAdd;
+        //return;
+    }
+    else{
+        struct node* temp = head;
+        while(temp->next != NULL){
+            temp = temp->next;
+        }
+        temp->next = toAdd;
+    }
+}
+
+// print linkedlist recursively
+void printLinkedList(struct node* theNode){
+    PUSH_TRACE("printLinkedList");
+    if(theNode != NULL){ // theNode will be null when reached the end of the linkedlist
+        printf("Node printed: index = %d, command = %s\n", theNode->index, theNode->cmd);
+        printLinkedList(theNode->next);
+    }
+    else{
+        printf("LinkedList done printing\n");
+    }
+}
+
 // ----------------------------------------------
 // function main
 int main(int argc, char *argv[])
@@ -303,6 +346,12 @@ while((read = getline(&line, &len, fp)) != -1){
     strncpy(array[ctr - 1], line, (strlen(line)+1));
 
 }
+
+// insert array into linkedlist and print recursively
+for (int i = 0; i < ctr; i++){
+    addNode(array[i], i);
+}
+printLinkedList(head);
 
 printArray(array, ctr);
 
