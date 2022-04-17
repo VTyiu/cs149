@@ -1,3 +1,6 @@
+// Done by Vanessa Tang and Corinna Chang
+// Assignment 4 of CS149
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -288,7 +291,7 @@ void printLinkedList(struct node* theNode){
 
 // free linkedlist after use
 void freeLinkedList(){
-    PUSH_TRACE("free LinkedList");
+    PUSH_TRACE("Free LinkedList");
     struct node* temp; // temp node to hold the node to free, will be the node we iterate through the linkedList with
     while(head != NULL){ // iterate through linkedList until all nodes are freed
     	temp = head;
