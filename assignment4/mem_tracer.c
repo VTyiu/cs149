@@ -235,13 +235,13 @@ void addRow(char *** arr, int rows, int col){
     *arr[rows-1] = (char *)malloc(sizeof(char) * col);
 }
 
-// function to print the array
+// function to print the array, taken from given make extend array
 void printArray(char **arr, int row) 
 {
   PUSH_TRACE("printArray");                              
-  for (int i = 0; i < row; i++)
+  for (int i = 0; i < row; i++)                           // for each row...
   {
-    printf("array[%d] = %s\n", i, arr[i]);
+    printf("array[%d] = %s\n", i, arr[i]);                // ...print its contents
   }
   POP_TRACE();                                     
 }
@@ -296,6 +296,7 @@ while((read = getline(&line, &len, fp)) != -1){
         // add row, can make it a function, will keep as manual code for now
         array = (char **) realloc(array, sizeof(char *)*ctr); // reallocate for row
         array[ctr - 1] = (char *) malloc(sizeof(char)*(strlen(line)+1)); // allocate for column
+    	// addRow(array, ctr, strlen(line)+1);
     }
 
     // copy value of string into allocated memory
@@ -304,6 +305,8 @@ while((read = getline(&line, &len, fp)) != -1){
 }
 
 printArray(array, ctr);
+
+fclose(fp);
 
 // deallocate line
 if (line){
